@@ -2,8 +2,11 @@ import hashlib
 import time
 import requests
 from flask import Flask, jsonify, request
+from flask_cors import CORS  # Importando o CORS
+import argparse
 
 app = Flask(__name__)
+CORS(app)  
 
 class Blockchain:
     def __init__(self, node_id):
@@ -131,4 +134,8 @@ def sync_chain():
         return jsonify({"message": "A cadeia local já está atualizada!"}), 200
 
 if __name__ == '__main__':
-    app.run(port=5004)
+    parser = argparse.ArgumentParser(description="Inicie o nó da blockchain em uma porta específica.")
+    parser.add_argument('-p', '--port', type=int, default=5001, help='Porta para executar o servidor Flask')
+    args = parser.parse_args()
+
+    app.run(port=args.port)

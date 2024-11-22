@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificação de Coordenadas: Terra ou Oceano</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    /* Estilos Gerais */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: auto;
+      flex-direction: column;
+      background-color: #f4f4f9;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #map {
+      height: 300px;
+      width: 80%;
+      margin-bottom: 20px;
+    }
+
+    .info-box {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      width: 80%;
+      max-width: 600px;
+      margin-bottom: 20px;
+    }
+
+    .info-box p {
+      margin: 5px 0;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .btn:hover {
+      background-color: #45a049;
+    }
+
+    #connectButton {
+      background-color: #008CBA;
+      /* Cor diferente para o novo botão */
+    }
+
+    #connectButton:hover {
+      background-color: #007BB5;
+      /* Cor diferente ao passar o mouse */
+    }
+
+    /* Estilos para os dados recebidos */
+    .data-list {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 2px solid #ddd;
+      text-align: left;
+    }
+
+    .json-data {
+      white-space: pre-wrap;
+      /* Para exibir o JSON de forma legível */
+      text-align: left;
+      font-size: 14px;
+      background-color: #f8f9fa;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-top: 20px;
+      max-height: 400px;
+      /* Definindo a altura máxima */
+      overflow-y: auto;
+      /* Adiciona o scroll vertical */
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Sensor 1</h1>
+  <div id="map"></div>
+  <div class="info-box" id="infoBox">
+    <p><strong>Coordenadas Selecionadas:</strong> <span id="coords">Nenhuma coordenada selecionada.</span></p>
+    <p><strong>Temperatura:</strong> <span id="temperature">-</span> °C</p>
+    <p><strong>Localização:</strong> <span id="location">-</span></p>
+    <p><strong>País:</strong> <span id="country">-</span></p>
+    <div style="display: flex; justify-content: center; gap: 10px;">
+      <button class="btn" id="sendButton">Enviar Dados</button>
+      <button class="btn" id="connectButton">Conectar ao Block</button>
+    </div>
+  </div>
+  <div class="data-list" style="overflow: auto;">
+    <h3>Dados Bloco</h3>
+    <div class="json-data" id="jsonData">
+      <!-- JSON recebido será exibido aqui -->
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script>
+    // Sua chave da API Geoapify (substitua pelo seu token)
+    const apiKey = 'e4cf16c1a26a483d8dd5c95ce79c15be';
+
+    // Criação do mapa
+    const map = L.map('map').setView([0, 0], 13); // Posição inicial do mapa
+
+    // Adicionando o mapa base (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Variável para armazenar o marcador atual
+    let currentMarker = null;
+
+    // Função para tratar o clique no mapa
+    map.on('click', function (e) {
+      const lat = e.latlng.lat;
+      const lon = e.latlng.lng;
+
+      // Exibe as coordenadas no painel
+      document.getElementById('coords').innerText = `Lat: ${lat} | Lng: ${lon}`;
+
+      // Chama a API para verificar se está em terra ou oceano
+      checkLandOrOcean(lat, lon);
+    });
+
+    // Função para verificar se as coordenadas estão em terra ou no oceano
+    function checkLandOrOcean(lat, lon) {
+      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=${apiKey}`;
+
+      // Realiza a requisição HTTP para a API Geoapify
+      fetch(url)
+        .then(response => {
+          // Verifica se a resposta foi bem-sucedida
+          if (!response.ok) {
+            throw new Error('Erro na requisição');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Verifica se existem dados válidos para processar
+          if (data && data.features && data.features.length > 0) {
+            const feature = data.features[0];
+            // Verifica se a área é de oceano ou terra
+            const isOcean = feature.properties && feature.properties.ocean;
+            handleLocation(isOcean, lat, lon, feature);
+          } else {
+            console.log("Nenhum dado encontrado para as coordenadas.");
+          }
+        })
+        .catch(error => {
+          console.error("Erro na requisição:", error);
+        });
+    }
+
+    // Função para lidar com a resposta de terra ou oceano
+    function handleLocation(isOcean, lat, lon, feature) {
+      if (isOcean) {
+        // Se for oceano, adiciona o marcador
+        if (currentMarker) {
+          map.removeLayer(currentMarker); // Remove o marcador anterior
+        }
+        currentMarker = L.marker([lat, lon]).addTo(map); // Adiciona o novo marcador no oceano
+        console.log("Resultado: Está no oceano.");
+      } else {
+        // Se for terra, remove o marcador e mostra um alerta
+        if (currentMarker) {
+          map.removeLayer(currentMarker); // Remove o marcador
+        }
+        alert("O local selecionado está em terra. Nenhum marcador será colocado.");
+        console.log("Resultado: Está em terra.");
+      }
+
+      // Atualizar informações de localização e temperatura
+      updateInfoBox(lat, lon, feature);
+    }
+
+    // Função para atualizar as informações na caixa de dados
+    function updateInfoBox(lat, lon, feature) {
+      // Simulação de temperatura aleatória
+      const temperature = (Math.random() * (33 - 20) + 20).toFixed(2); // Temperatura entre 0 e 30°C
+
+      document.getElementById('temperature').innerText = temperature;
+      document.getElementById('location').innerText = feature.properties.name || 'Local desconhecido';
+      document.getElementById('country').innerText = feature.properties.country || 'Desconhecido';
+    }
+
+    // Função para enviar os dados ao servidor com alerta de confirmação
+    document.getElementById('sendButton').addEventListener('click', function () {
+      // Exibe um alerta de confirmação
+      alert('Você está prestes a enviar os dados. Clique em OK para continuar.');
+
+      const lat = currentMarker.getLatLng().lat;
+      const lon = currentMarker.getLatLng().lng;
+      const temperature = document.getElementById('temperature').innerText;
+      const location = document.getElementById('location').innerText;
+      const country = document.getElementById('country').innerText;
+
+      const data = {
+        sensor: 'sensor1',
+        coordinates: { lat, lon },
+        timestamp: new Date().toISOString(),
+        temperature,
+        location,
+        country
+      };
+
+      // Enviar dados para o servidor via POST
+      fetch('http://localhost:5001/add_data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data })
+      })
+        .then(response => response.json())
+        .then(responseData => {
+          alert('Dados enviados com sucesso!');
+          console.log('Dados enviados com sucesso:', responseData);
+          return fetch('http://localhost:5001/mine', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+        })
+        .catch(error => {
+          alert('Erro ao enviar os dados.');
+          console.error('Erro ao enviar os dados:', error);
+        });
+    });
+
+
+    // Função para conectar ao Block
+    document.getElementById('connectButton').addEventListener('click', function () {
+      const data = {
+        action: 'conectar',
+        timestamp: new Date().toISOString(),
+      };
+
+      // Enviar dados para a URL genérica
+      fetch('http://localhost:5001/add_peer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ peer: "localhost:5002" })
+      })
+        .then(response => response.json())
+        .then(responseData => {
+          alert('Conexão realizada com sucesso');
+        })
+        .catch(error => {
+          alert('Erro ao conectar:', error);
+        });
+    });
+    fetch('http://localhost:5001/get_chain')
+      .then(response => response.json())
+      .then(data => {
+        // Exibe os dados JSON puros na div 'jsonData'
+        document.getElementById('jsonData').textContent = JSON.stringify(data, null, 2);
+      })
+      .catch(error => console.error('Erro ao obter os dados:', error));
+  </script>
+</body>
+
+</html>

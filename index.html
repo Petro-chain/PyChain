@@ -1,65 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mapa com Marcador</title>
-  <!-- Link para o CSS do Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <style>
-    #map {
-      height: 300px; /* Altura menor */
-      width: 80%; /* Largura ajustável */
-      margin: 20px auto; /* Centraliza o mapa */
-      border: 1px solid #ccc; /* Adiciona uma borda */
-    }
-    #info {
-      text-align: center;
-      margin: 10px auto;
-      padding: 10px;
-      width: 80%;
-      background-color: #f9f9f9;
-      border: 1px solid #ddd;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação de Coordenadas: Terra ou Oceano</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-  <div id="info">Clique no mapa para adicionar um marcador e exibir informações de localização.</div>
-  <div id="map"></div>
+    <h1 style="margin-top: ;">Verifique se as Coordenadas são em Terra ou Oceano</h1>
+    <div id="map"></div>
+    <div>
+        Coordenadas Selecionadas: <span id="coords">Nenhuma coordenada selecionada.</span>
+    </div>
 
-  <!-- Script do Leaflet -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script>
-    // Inicializa o mapa
-    const map = L.map('map').setView([0, 0], 2);
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Sua chave da API Geoapify (substitua pelo seu token)
+        const apiKey = 'e4cf16c1a26a483d8dd5c95ce79c15be'; 
 
-    // Adiciona o mapa base
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+        // Criação do mapa
+        const map = L.map('map').setView([0, 0], 13); // Posição inicial do mapa
 
-    // Variável para armazenar o marcador
-    let marker = null;
+        // Adicionando o mapa base (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
-    // Evento de clique no mapa
-    map.on('click', async function (e) {
-      const { lat, lng } = e.latlng; // Latitude e longitude do clique
-      const infoDiv = document.getElementById('info');
+        // Variável para armazenar o marcador atual
+        let currentMarker = null;
 
-      // Remove o marcador anterior, se existir
-      if (marker) {
-        map.removeLayer(marker);
-      }
+        // Função para tratar o clique no mapa
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lon = e.latlng.lng;
 
-      // Adiciona um marcador no local clicado
-      marker = L.marker([lat, lng]).addTo(map);
+            // Exibe as coordenadas no painel
+            document.getElementById('coords').innerText = `Lat: ${lat} | Lng: ${lon}`;
 
-      // Atualiza as informações no div
-      infoDiv.innerHTML = `
-        <strong>Coordenadas:</strong> Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}
-      `;
-    });
-  </script>
+            // Chama a API para verificar se está em terra ou oceano
+            checkLandOrOcean(lat, lon);
+        });
+
+        // Função para verificar se as coordenadas estão em terra ou no oceano
+        function checkLandOrOcean(lat, lon) {
+            const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=${apiKey}`;
+
+            // Realiza a requisição HTTP para a API Geoapify
+            fetch(url)
+                .then(response => {
+                    // Verifica se a resposta foi bem-sucedida
+                    if (!response.ok) {
+                        throw new Error('Erro na requisição');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Verifica se existem dados válidos para processar
+                    if (data && data.features && data.features.length > 0) {
+                        const feature = data.features[0];
+                        // Verifica se a área é de oceano ou terra
+                        if (feature.properties && feature.properties.ocean) {
+                            // Se for oceano, adiciona o marcador
+                            if (currentMarker) {
+                                map.removeLayer(currentMarker); // Remove o marcador anterior se houver
+                            }
+                            currentMarker = L.marker([lat, lon]).addTo(map); // Adiciona o novo marcador no oceano
+                            console.log("Resultado: Está no oceano.");
+                        } else {
+                            // Se for terra, remove o marcador e mostra um alerta
+                            if (currentMarker) {
+                                map.removeLayer(currentMarker); // Remove o marcador
+                            }
+                            alert("O local selecionado está em terra. Nenhum marcador será colocado.");
+                            console.log("Resultado: Está em terra.");
+                        }
+                    } else {
+                        console.log("Nenhum dado encontrado para as coordenadas.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro na requisição:", error);
+                });
+        }
+    </script>
 </body>
 </html>

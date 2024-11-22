@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Menu - Adicionar Sensor</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Centraliza o conteúdo na tela */
+    body, html {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f8f9fa;
+    }
+
+    .container {
+      text-align: center;
+    }
+
+    /* Botão de sensor com tamanho maior */
+    .sensor-button {
+      width: 200px;
+      height: 200px;
+      font-size: 18px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      text-decoration: none;
+    }
+
+    /* Container de sensores */
+    .sensor-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    /* Estilos para os dados recebidos */
+    .data-list {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 2px solid #ddd;
+      text-align: left;
+    }
+
+    .json-data {
+      white-space: pre-wrap; /* Para exibir o JSON de forma legível */
+      text-align: left;
+      font-size: 14px;
+      background-color: #f8f9fa;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-top: 20px;
+      max-height: 400px; /* Definindo a altura máxima */
+      overflow-y: auto;  /* Adiciona o scroll vertical */
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 class="mb-4 mt-5">Menu de Sensores</h1>
+    <div class="mb-4">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSensorModal">Adicionar Sensor</button>
+    </div>
+
+    <!-- Modal para adicionar sensor -->
+    <div class="modal fade" id="addSensorModal" tabindex="-1" aria-labelledby="addSensorModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addSensorModalLabel">Adicionar Sensor</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="sensorName" class="form-label">Nome do Sensor</label>
+              <input type="text" class="form-control" id="sensorName" placeholder="Digite o nome do sensor">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            <button type="button" class="btn btn-primary" id="addSensorBtn">Adicionar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Container de sensores -->
+    <div class="sensor-container" id="sensorContainer">
+      <!-- Sensores adicionados aparecerão aqui como botões -->
+    </div>
+
+    <!-- Dados Coletados -->
+    <div class="data-list" style="overflow: auto;">
+      <h3>Dados Coletados</h3>
+      <div class="json-data" id="jsonData">
+        <!-- JSON recebido será exibido aqui -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS e dependências -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Recupera os sensores armazenados da sessão (se houver)
+    let sensors = JSON.parse(sessionStorage.getItem('sensors')) || []; // Se não houver nada, inicia com um array vazio
+
+    // Função para adicionar sensor
+    document.getElementById('addSensorBtn').addEventListener('click', function() {
+      const sensorName = document.getElementById('sensorName').value;
+      if (sensorName.trim() !== "") {
+        // Adiciona o sensor ao array
+        sensors.push(sensorName);
+
+        // Salva o array de sensores no sessionStorage
+        sessionStorage.setItem('sensors', JSON.stringify(sensors));
+
+        // Cria o botão de sensor como um link (href dinâmico)
+        const sensorButton = document.createElement('a');
+        sensorButton.classList.add('sensor-button');
+        sensorButton.target = "_blank";
+        sensorButton.href = `sensor${sensors.length}.html`; // Link dinâmico
+        sensorButton.textContent = sensorName;
+
+        // Adiciona o botão no container de sensores
+        document.getElementById('sensorContainer').appendChild(sensorButton);
+
+        // Limpa o campo de entrada
+        document.getElementById('sensorName').value = '';
+
+        // Fecha o modal após adicionar
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addSensorModal'));
+        modal.hide();
+      } else {
+        alert('Por favor, insira um nome para o sensor!');
+      }
+    });
+
+    // Função para renderizar os sensores quando a página carregar
+    window.onload = function() {
+      // Renderiza os sensores armazenados na sessão
+      sensors.forEach(function(sensorName) {
+        // Cria o botão de sensor
+        const sensorButton = document.createElement('a');
+        sensorButton.classList.add('sensor-button');
+        sensorButton.target = "_blank";
+        sensorButton.href = `sensor${sensors.indexOf(sensorName) + 1}.html`; // Link dinâmico
+        sensorButton.textContent = sensorName;
+
+        // Adiciona o botão no container de sensores
+        document.getElementById('sensorContainer').appendChild(sensorButton);
+      });
+
+      // Realiza a requisição GET para buscar os dados
+      fetch('http://localhost:5001/get_chain')
+        .then(response => response.json())
+        .then(data => {
+          // Exibe os dados JSON puros na div 'jsonData'
+          document.getElementById('jsonData').textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(error => console.error('Erro ao obter os dados:', error));
+    };
+  </script>
+</body>
+</html>
