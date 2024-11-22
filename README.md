@@ -1,1 +1,181 @@
-# PyChain
+
+# Documentação do Uso da Blockchain com Flask
+
+Este projeto implementa uma blockchain simples com funcionalidades de mineração, sincronização de nós e gerenciamento de peers, utilizando Flask como API.
+
+---
+
+## **Requisitos**
+- Python 3.7 ou superior
+- Bibliotecas:
+  - `Flask`
+  - `Flask-CORS`
+  - `requests`
+
+Instale as dependências com:
+```bash
+pip install flask flask-cors requests
+```
+
+---
+
+## **Como Executar**
+### **Iniciar um Nó**
+Execute o script e defina a porta do nó:
+```bash
+python blockchain.py --port <porta>
+```
+Se a porta não for especificada, o nó será executado na porta `5001` por padrão.
+
+### **Endpoints Disponíveis**
+A API fornece os seguintes endpoints:
+
+---
+
+### **1. Adicionar um Peer**
+**Rota:**  
+`POST /add_peer`
+
+**Descrição:**  
+Adiciona um novo peer à lista de peers do nó atual e sincroniza a cadeia com ele.
+
+**Payload:**
+```json
+{
+  "peer": "IP:porta"
+}
+```
+
+**Exemplo de Uso (cURL):**
+```bash
+curl -X POST http://127.0.0.1:5001/add_peer -H "Content-Type: application/json" -d '{"peer": "127.0.0.1:5002"}'
+```
+
+---
+
+### **2. Adicionar Dados**
+**Rota:**  
+`POST /add_data`
+
+**Descrição:**  
+Adiciona dados à fila de transações.
+
+**Payload:**
+```json
+{
+  "data": "Informação para a transação"
+}
+```
+
+**Exemplo de Uso (cURL):**
+```bash
+curl -X POST http://127.0.0.1:5001/add_data -H "Content-Type: application/json" -d '{"data": "Transação exemplo"}'
+```
+
+---
+
+### **3. Minerar um Bloco**
+**Rota:**  
+`POST /mine`
+
+**Descrição:**  
+Mineria um novo bloco utilizando as transações na fila e sincroniza o bloco com todos os peers.
+
+**Exemplo de Uso (cURL):**
+```bash
+curl -X POST http://127.0.0.1:5001/mine
+```
+
+**Resposta:**
+```json
+{
+  "message": "Bloco minerado e sincronizado com todos os peers!",
+  "block": {
+    "index": 2,
+    "timestamp": 1681928801.123456,
+    "data": ["Transação exemplo"],
+    "previous_hash": "0000abc123...",
+    "hash": "0000def456...",
+    "nonce": 10456
+  }
+}
+```
+
+---
+
+### **4. Obter a Cadeia**
+**Rota:**  
+`GET /get_chain`
+
+**Descrição:**  
+Obtém a cadeia de blocos do nó.
+
+**Exemplo de Uso (cURL):**
+```bash
+curl -X GET http://127.0.0.1:5001/get_chain
+```
+
+**Resposta:**
+```json
+{
+  "chain": [
+    {
+      "index": 1,
+      "timestamp": 1681928800.123456,
+      "data": "Genesis Block",
+      "previous_hash": "0",
+      "hash": "0000abc123...",
+      "nonce": 0
+    },
+    {
+      "index": 2,
+      "timestamp": 1681928801.123456,
+      "data": ["Transação exemplo"],
+      "previous_hash": "0000abc123...",
+      "hash": "0000def456...",
+      "nonce": 10456
+    }
+  ],
+  "length": 2
+}
+```
+
+---
+
+### **5. Sincronizar a Cadeia**
+**Rota:**  
+`POST /sync_chain`
+
+**Descrição:**  
+Sincroniza a cadeia local com a cadeia recebida de outro nó.
+
+**Payload:**
+```json
+{
+  "chain": [...]
+}
+```
+
+**Exemplo de Uso (cURL):**
+```bash
+curl -X POST http://127.0.0.1:5001/sync_chain -H "Content-Type: application/json" -d '{"chain": [...]}'
+```
+
+---
+
+## **Sincronização Automática**
+Quando um peer é adicionado, ele automaticamente sincroniza sua cadeia local com o peer registrado. Além disso, após a mineração de um bloco, todos os peers registrados recebem a cadeia atualizada.
+
+---
+
+## **Personalização**
+O ID do nó pode ser alterado no construtor da classe `Blockchain`.  
+Exemplo:
+```python
+blockchain = Blockchain("meu_nodo_personalizado")
+```
+
+---
+
+## **Licença**
+Este projeto é distribuído sob a licença MIT. Sinta-se à vontade para usar e modificar conforme necessário.

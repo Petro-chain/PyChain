@@ -98,7 +98,7 @@
 
 <body>
 
-  <h1>Sensor 2</h1>
+  <h1>Sensor 4</h1>
   <div id="map"></div>
   <div class="info-box" id="infoBox">
     <p><strong>Coordenadas Selecionadas:</strong> <span id="coords">Nenhuma coordenada selecionada.</span></p>
@@ -218,7 +218,7 @@
       const country = document.getElementById('country').innerText;
 
       const data = {
-        sensor: 'sensor2',
+        sensor: 'sensor4',
         coordinates: { lat, lon },
         timestamp: new Date().toISOString(),
         temperature,
@@ -226,8 +226,23 @@
         country
       };
 
+      fetch('http://localhost:5001/add_peer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ peer: "localhost:5004" })
+      })
+        .then(response => response.json())
+        .then(responseData => {
+          alert('Conexão realizada com sucesso');
+        })
+        .catch(error => {
+          alert('Erro ao conectar:', error);
+        });
+
       // Enviar dados para o servidor via POST
-      fetch('http://localhost:5001/add_data', {
+      fetch('http://localhost:5004/add_data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -238,7 +253,7 @@
         .then(responseData => {
           alert('Dados enviados com sucesso!');
           console.log('Dados enviados com sucesso:', responseData);
-          return fetch('http://localhost:5001/mine', {
+          return fetch('http://localhost:5004/mine', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -260,22 +275,31 @@
       };
 
       // Enviar dados para a URL genérica
-      fetch('http://localhost:5001/add_peer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ peer: "localhost:5002" })
-      })
-        .then(response => response.json())
-        .then(responseData => {
-          alert('Conexão realizada com sucesso');
+      const peers = ["localhost:5002", "localhost:5003", "localhost:5001"];
+
+      peers.forEach(peer => {
+        fetch('http://localhost:5004/add_peer', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ peer })
         })
-        .catch(error => {
-          alert('Erro ao conectar:', error);
-        });
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Erro na requisição');
+            }
+            return response.json();
+          })
+          .then(responseData => {
+            console.log(`Conexão com ${peer} realizada com sucesso:`, responseData);
+          })
+          .catch(error => {
+            console.error(`Erro ao conectar com ${peer}:`, error);
+          });
+      });
     });
-    fetch('http://localhost:5002/get_chain')
+    fetch('http://localhost:5004/get_chain')
       .then(response => response.json())
       .then(data => {
         // Exibe os dados JSON puros na div 'jsonData'
