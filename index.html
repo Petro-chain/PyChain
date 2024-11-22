@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa com Marcador</title>
+  <!-- Link para o CSS do Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    #map {
+      height: 300px; /* Altura menor */
+      width: 80%; /* Largura ajustável */
+      margin: 20px auto; /* Centraliza o mapa */
+      border: 1px solid #ccc; /* Adiciona uma borda */
+    }
+    #info {
+      text-align: center;
+      margin: 10px auto;
+      padding: 10px;
+      width: 80%;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">Clique no mapa para adicionar um marcador e exibir informações de localização.</div>
+  <div id="map"></div>
+
+  <!-- Script do Leaflet -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Inicializa o mapa
+    const map = L.map('map').setView([0, 0], 2);
+
+    // Adiciona o mapa base
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Variável para armazenar o marcador
+    let marker = null;
+
+    // Evento de clique no mapa
+    map.on('click', async function (e) {
+      const { lat, lng } = e.latlng; // Latitude e longitude do clique
+      const infoDiv = document.getElementById('info');
+
+      // Remove o marcador anterior, se existir
+      if (marker) {
+        map.removeLayer(marker);
+      }
+
+      // Adiciona um marcador no local clicado
+      marker = L.marker([lat, lng]).addTo(map);
+
+      // Atualiza as informações no div
+      infoDiv.innerHTML = `
+        <strong>Coordenadas:</strong> Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}
+      `;
+    });
+  </script>
+</body>
+</html>
