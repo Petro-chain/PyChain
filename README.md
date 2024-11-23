@@ -176,9 +176,8 @@ blockchain = Blockchain("meu_nodo_personalizado")
 ```
 
 ---
-# Documentação do Endpoint `add_peer`
 
-## **Descrição**
+## **Documentação do Endpoint `add_peer`**
 Adiciona um novo peer à lista de peers do nó atual e sincroniza a cadeia com ele.  
 Os peers representam outros nós na rede blockchain, identificados por `IP:porta`.  
 Ao adicionar um peer, a cadeia do nó atual é automaticamente sincronizada com o peer adicionado. Isso garante consistência na rede.
