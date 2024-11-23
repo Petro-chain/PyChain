@@ -176,6 +176,50 @@ blockchain = Blockchain("meu_nodo_personalizado")
 ```
 
 ---
+# Documentação do Endpoint `add_peer`
+
+## **Descrição**
+Adiciona um novo peer à lista de peers do nó atual e sincroniza a cadeia com ele.  
+Os peers representam outros nós na rede blockchain, identificados por `IP:porta`.  
+Ao adicionar um peer, a cadeia do nó atual é automaticamente sincronizada com o peer adicionado. Isso garante consistência na rede.
+
+---
+
+## **Rota**
+`POST /add_peer`
+
+---
+
+## **Payload**
+```json
+{
+  "peer": "IP:porta"
+}
+```
+
+---
+
+## **Funcionamento Interno**
+1. O endereço do peer é armazenado no conjunto `peers` do nó atual.
+2. O nó tenta sincronizar sua cadeia local com a cadeia do peer adicionado.
+3. Mensagens de sucesso ou erro são exibidas no console.
+
+---
+
+## **Exemplo de Uso (cURL)**
+```bash
+curl -X POST http://127.0.0.1:5001/add_peer -H "Content-Type: application/json" -d '{"peer": "127.0.0.1:5002"}'
+```
+
+---
+
+## **Resposta**
+### **Sucesso**
+```json
+{
+  "message": "Peer adicionado e sincronizado automaticamente!"
+}
+```
 
 ## **Licença**
 Este projeto é distribuído sob a licença MIT. Sinta-se à vontade para usar e modificar conforme necessário.
