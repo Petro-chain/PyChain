@@ -105,14 +105,14 @@ curl -X POST http://127.0.0.1:5001/mine
 
 ### **4. Obter a Cadeia**
 **Rota:**  
-`GET /get_chain`
+`GET /chain`
 
 **Descrição:**  
 Obtém a cadeia de blocos do nó.
 
 **Exemplo de Uso (cURL):**
 ```bash
-curl -X GET http://127.0.0.1:5001/get_chain
+curl -X GET http://127.0.0.1:5001/chain
 ```
 
 **Resposta:**
@@ -142,31 +142,7 @@ curl -X GET http://127.0.0.1:5001/get_chain
 
 ---
 
-### **5. Sincronizar a Cadeia**
-**Rota:**  
-`POST /sync_chain`
 
-**Descrição:**  
-Sincroniza a cadeia local com a cadeia recebida de outro nó.
-
-**Payload:**
-```json
-{
-  "chain": [...]
-}
-```
-
-**Exemplo de Uso (cURL):**
-```bash
-curl -X POST http://127.0.0.1:5001/sync_chain -H "Content-Type: application/json" -d '{"chain": [...]}'
-```
-
----
-
-## **Sincronização Automática**
-Quando um peer é adicionado, ele automaticamente sincroniza sua cadeia local com o peer registrado. Além disso, após a mineração de um bloco, todos os peers registrados recebem a cadeia atualizada.
-
----
 
 ## **Personalização**
 O ID do nó pode ser alterado no construtor da classe `Blockchain`.  
@@ -209,6 +185,10 @@ Ao adicionar um peer, a cadeia do nó atual é automaticamente sincronizada com 
 ```bash
 curl -X POST http://127.0.0.1:5001/add_peer -H "Content-Type: application/json" -d '{"peer": "127.0.0.1:5002"}'
 ```
+## Sincronizar
+```bash
+curl -X POST -H "Content-Type: application/json" -d '{"node": "localhost:5001"}' http://localhost:5002/sync_chain_from_peer
+```
 
 ---
 
@@ -220,5 +200,3 @@ curl -X POST http://127.0.0.1:5001/add_peer -H "Content-Type: application/json" 
 }
 ```
 
-## **Licença**
-Este projeto é distribuído sob a licença MIT. Sinta-se à vontade para usar e modificar conforme necessário.
