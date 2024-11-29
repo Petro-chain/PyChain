@@ -46,7 +46,7 @@ Adiciona um novo peer à lista de peers do nó atual e sincroniza a cadeia com e
 }
 ```
 
-**Exemplo de Uso (cURL):**
+**Adicionar um Peer:**
 ```bash
 curl -X POST http://127.0.0.1:5001/add_peer -H "Content-Type: application/json" -d '{"peer": "127.0.0.1:5002"}'
 ```
@@ -67,7 +67,7 @@ Adiciona dados à fila de transações.
 }
 ```
 
-**Exemplo de Uso (cURL):**
+**Adicionar transações:**
 ```bash
 curl -X POST http://127.0.0.1:5001/add_data -H "Content-Type: application/json" -d '{"data": "Transação exemplo"}'
 ```
@@ -81,7 +81,7 @@ curl -X POST http://127.0.0.1:5001/add_data -H "Content-Type: application/json" 
 **Descrição:**  
 Mineria um novo bloco utilizando as transações na fila e sincroniza o bloco com todos os peers.
 
-**Exemplo de Uso (cURL):**
+**Minerar:**
 ```bash
 curl -X POST http://127.0.0.1:5001/mine
 ```
@@ -110,7 +110,7 @@ curl -X POST http://127.0.0.1:5001/mine
 **Descrição:**  
 Obtém a cadeia de blocos do nó.
 
-**Exemplo de Uso (cURL):**
+**Obter cadeia:**
 ```bash
 curl -X GET http://127.0.0.1:5001/chain
 ```
@@ -181,7 +181,7 @@ Ao adicionar um peer, a cadeia do nó atual é automaticamente sincronizada com 
 
 ---
 
-## **Exemplo de Uso (cURL)**
+## **Add peer**
 ```bash
 curl -X POST http://127.0.0.1:5001/add_peer -H "Content-Type: application/json" -d '{"peer": "127.0.0.1:5002"}'
 ```
